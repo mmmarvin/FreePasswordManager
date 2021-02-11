@@ -3,6 +3,10 @@
 
 A simple password manager that supports encryption.
 
+#Usage:
+=================
+To run type python3 fpm.py
+
 #Prerequisites:
 =================
 For linux version, the following libraries / frameworks must be installed for FreePasswordManager to run:
