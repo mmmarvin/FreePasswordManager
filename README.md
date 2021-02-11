@@ -9,7 +9,7 @@ To run type python3 fpm.py
 
 #Prerequisites:
 =================
-For linux version, the following libraries / frameworks must be installed for FreePasswordManager to run:
+The following libraries / frameworks must be installed for FreePasswordManager to run:
 - Python 3.5
 - Qt 5.x framework
 - PyQt5 
