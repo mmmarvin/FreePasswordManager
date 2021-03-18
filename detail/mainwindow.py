@@ -19,6 +19,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import pyperclip
+import os
+import pathlib
 
 from detail import passworddialog
 from detail import userdetail
@@ -131,56 +133,60 @@ class MainWindow(QMainWindow):
 	def __openAction(self):
 		filenameTuple = QFileDialog.getOpenFileName(self, "Open Password Container File...", "", self.tr("FreePasswordManager Container Files (*.fpc)"))
 		if len(filenameTuple[0]) > 0:
-			header = self.__mUserList.loadHeaderFromFile(filenameTuple[0])
-			if header == None:
-				QMessageBox.warning(self, self.tr("Warning"), self.tr("Invalid PAC file!"))
-			else:
-				if header.encrypted():
-					tries = 0
-					finished = False
-					opened = False
+			self.openPAC(filenameTuple[0])
+
+	def openPAC(self, filename):
+		header = self.__mUserList.loadHeaderFromFile(filename)
+		if header == None:
+			QMessageBox.warning(self, self.tr("Warning"), self.tr("Invalid PAC file!"))
+		else:
+			if header.encrypted():
+				tries = 0
+				finished = False
+				opened = False
+				
+				while tries < 3 and not finished:
+					passphrase = QInputDialog.getText(self, self.tr("Password Input"), self.tr("Enter master password:"), QLineEdit.Password)
 					
-					while tries < 3 and not finished:
-						passphrase = QInputDialog.getText(self, self.tr("Password Input"), self.tr("Enter master password:"), QLineEdit.Password)
-						
-						if passphrase[1]:
-							if len(passphrase[0]) > 0:
-								self.__mUserList.setMasterKey(passphrase[0])
-								
-								result = self.__mUserList.loadFromFile(filenameTuple[0])
-								print(result)
-								if result == -1:
-									tries += 1
-								elif result == -2:
-									finished = True
-								elif result == 0:
-									finished = True
-									opened = True
-								else:
-									finished = True
-							else:
+					if passphrase[1]:
+						if len(passphrase[0]) > 0:
+							self.__mUserList.setMasterKey(passphrase[0])
+							
+							result = self.__mUserList.loadFromFile(filename)
+							print(result)
+							if result == -1:
 								tries += 1
-					
-					if finished:
-						if not opened:
-							QMessageBox.warning(self, self.tr("Warning"), self.tr("Cannot open file \"" + filenameTuple[0] + "\"!"))
+							elif result == -2:
+								finished = True
+							elif result == 0:
+								finished = True
+								opened = True
+							else:
+								finished = True
 						else:
-							self.__mFilename = filenameTuple[0]
-							self.setWindowTitle(self.WINDOW_TITLE % filenameTuple[0])
-							self.__enableCreationActions()
-							self.__updateList()
-							self.__mOptionsChangeMasterPassword.setEnabled(True)
+							tries += 1
+				
+				if finished:
+					if not opened:
+						QMessageBox.warning(self, self.tr("Warning"), self.tr("Cannot open file \"" + filenameTuple[0] + "\"!"))
 					else:
-						QMessageBox.warning(self, self.tr("warning"), self.tr("Reached the limit of password tries"))
-				else:
-					if self.__mUserList.loadFromFile(filenameTuple[0]) == 0:					
-						self.__mFilename = filenameTuple[0]
-						self.setWindowTitle(self.WINDOW_TITLE % filenameTuple[0])
+						self.__mFilename = filename
+						self.setWindowTitle(self.WINDOW_TITLE % filename)
 						self.__enableCreationActions()
 						self.__updateList()
 						self.__mOptionsChangeMasterPassword.setEnabled(True)
-					else:
-						QMessageBox.warning(self, self.tr("Warning"), self.tr("Cannot open file \"" + filenameTuple[0] + "\"!"))
+				else:
+					QMessageBox.warning(self, self.tr("warning"), self.tr("Reached the limit of password tries"))
+			else:
+				if self.__mUserList.loadFromFile(filename) == 0:					
+					self.__mFilename = filename
+					self.setWindowTitle(self.WINDOW_TITLE % filename)
+					self.__enableCreationActions()
+					self.__updateList()
+					self.__mOptionsChangeMasterPassword.setEnabled(True)
+				else:
+					QMessageBox.warning(self, self.tr("Warning"), self.tr("Cannot open file \"" + filenameTuple[0] + "\"!"))
+		
 	def __saveAction(self):
 		if len(self.__mFilename) > 0:
 			if not self.__mUserList.saveToFile(self.__mFilename):
@@ -297,7 +303,9 @@ class MainWindow(QMainWindow):
 		self.__tryAddPassword(False)
 		
 	def __aboutAction(self):
-		QMessageBox.about(self, "About", "<center><img src=\"icon.png\"><br /><br /><font size=4>FreePasswordManager v.1.00</font><br /><font size=3>by Marvin Manese</font><br><br><font size=2>Copyright (c) 2019</font></center>")
+		icon_file = os.path.join(pathlib.Path(__file__).parent.absolute(), "..")
+		icon_file = os.path.join(icon_file, "icon.png")
+		QMessageBox.about(self, "About", "<center><img src=\"" + icon_file +"\"><br /><br /><font size=4>FreePasswordManager v.1.00</font><br /><font size=3>by Marvin Manese</font><br><br><font size=2>Copyright (c) 2019</font></center>")
 	
 	def __copyUsernameAction(self):
 		if self.__mTabBar.currentIndex() >= 0 and self.__mSelectedItem >= 0:

@@ -16,11 +16,14 @@
 ########
 from PyQt5.QtWidgets import *
 import detail.mainwindow
+import sys
 
 def main():
 	app = QApplication([])
-
+	
 	mainWindow = detail.mainwindow.MainWindow()
+	if len(sys.argv) == 2:
+		mainWindow.openPAC(sys.argv[1])
 	mainWindow.show()
 
 	app.exec_()
