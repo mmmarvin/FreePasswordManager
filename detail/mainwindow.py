@@ -26,14 +26,12 @@ from detail import passworddialog
 from detail import userdetail
 
 class MainWindow(QMainWindow):
-	WINDOW_TITLE = "FreePasswordManager v.1.00 [%s]"
+	WINDOW_TITLE = "FreePasswordManager - %s"
 	
 	def __init__(self):
 		super().__init__()
 		super().setMinimumSize(400, 300)
 		self.setWindowTitle(self.WINDOW_TITLE % "Untitled")
-		
-		# Fix from: https://stackoverflow.com/questions/27131294/error-qobjectstarttimer-qtimer-can-only-be-used-with-threads-started-with-qt
 		self.setAttribute(Qt.WA_DeleteOnClose) 
 		
 		self.__mUserList = userdetail.UserDetailList()
@@ -131,7 +129,7 @@ class MainWindow(QMainWindow):
 		self.__closeAction()
 		
 	def __openAction(self):
-		filenameTuple = QFileDialog.getOpenFileName(self, "Open Password Container File...", "", self.tr("FreePasswordManager Container Files (*.fpc)"))
+		filenameTuple = QFileDialog.getOpenFileName(self, "Open...", "", self.tr("FreePasswordManager Container Files (*.fpc)"))
 		if len(filenameTuple[0]) > 0:
 			self.openPAC(filenameTuple[0])
 
@@ -147,13 +145,11 @@ class MainWindow(QMainWindow):
 				
 				while tries < 3 and not finished:
 					passphrase = QInputDialog.getText(self, self.tr("Password Input"), self.tr("Enter master password:"), QLineEdit.Password)
-					
 					if passphrase[1]:
 						if len(passphrase[0]) > 0:
 							self.__mUserList.setMasterKey(passphrase[0])
 							
 							result = self.__mUserList.loadFromFile(filename)
-							print(result)
 							if result == -1:
 								tries += 1
 							elif result == -2:
@@ -165,10 +161,12 @@ class MainWindow(QMainWindow):
 								finished = True
 						else:
 							tries += 1
+					else:
+						finished = True
 				
 				if finished:
 					if not opened:
-						QMessageBox.warning(self, self.tr("Warning"), self.tr("Cannot open file \"" + filenameTuple[0] + "\"!"))
+						QMessageBox.warning(self, self.tr("Warning"), self.tr("Cannot open file \"" + filename + "\"!"))
 					else:
 						self.__mFilename = filename
 						self.setWindowTitle(self.WINDOW_TITLE % filename)
@@ -185,7 +183,7 @@ class MainWindow(QMainWindow):
 					self.__updateList()
 					self.__mOptionsChangeMasterPassword.setEnabled(True)
 				else:
-					QMessageBox.warning(self, self.tr("Warning"), self.tr("Cannot open file \"" + filenameTuple[0] + "\"!"))
+					QMessageBox.warning(self, self.tr("Warning"), self.tr("Cannot open file \"" + filename + "\"!"))
 		
 	def __saveAction(self):
 		if len(self.__mFilename) > 0:
@@ -198,7 +196,7 @@ class MainWindow(QMainWindow):
 			self.__saveAsAction()
 						
 	def __saveAsAction(self):
-		filenameTuple = QFileDialog.getSaveFileName(self, self.tr("Save Password Container File..."), "", self.tr("FreePasswordManager Container Files (*.fpc)"))
+		filenameTuple = QFileDialog.getSaveFileName(self, self.tr("Save..."), "", self.tr("FreePasswordManager Container Files (*.fpc)"))
 		if len(filenameTuple[0]) > 0:
 			self.__tryAddPassword(True)
 			
